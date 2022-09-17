@@ -1,0 +1,17 @@
+-------------------------------------------
+utilidadesHA: tools script for HA Container
+-------------------------------------------
+
+Loading config from /opt/utilidadesHA/utilidadesHA.config
+
+[+] Usage: 
+
+	[-i]  Install HA version. If HA is installed, is the same than -u option
+	[-u]  Update HA version
+	[-c]  Check if exists a new version
+	[-b folder]  create a backup into indicated folder (inside /backup/)
+	[-g folder]  crate a backup using gpg into indicated folder (inside /backup/)
+	[-r]  explain how to recover a gpg backup 
+	[-f]  force an update without check if the available version is already installed
+	[-t tag] force an update to the image version tagged with tag  (by example 2022.9.0)
+	[-h]  shows this info
