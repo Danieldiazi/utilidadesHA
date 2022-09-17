@@ -51,7 +51,7 @@ utilidadesHA.config is the file to configure your options, you only need to edit
 | IMAGE_DOCKER_x86_64| The same for x86 64 bits arch |  ghcr.io/home-assistant/home-assistant|
 | TAG_DOCKER| Tag to be used  | stable  |
 | COLOURS | You can choose to have colours when use this script or not. Values: "si" if you wish colours, another value if you don't |  si |
-| FORCE | Is to force upgrade, this value by default is 0. Is used inside script|  0|
+| FORCE | Is to force upgrade, this value by default is 0. It's used inside script|  0|
 
 
 # Usage
@@ -78,7 +78,7 @@ Only run script without options or add -h option
    ```
 
 ## Check new version
-Option "-u" check if exists a new version. It only check info from html code on home assistant webpage.
+Option "-u" check if exists a new version. It only checks info from html code on home assistant webpage.
 
 
 ## Configure schedule backup 
