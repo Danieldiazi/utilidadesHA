@@ -76,9 +76,18 @@ Only run script without options or add -h option
    ```bash
      ./utilidadesHA.bash
    ```
-
+## Upgrade HA version
+![Upgrade](https://github.com/Danieldiazi/utilidadesHA/blob/22be384cdac801e6696830ca026e9e3997c0bb6c/docs/upgrade.gif)
 ## Check new version
 Option "-u" check if exists a new version. It only checks info from html code on home assistant webpage.
+
+## Upgrade to a specified tag
+![Tag](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/tag.gif)
+
+
+## Backup
+In order to create a backup, the user running this command need to have permissions on all files into /config folder.
+![Backup](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/backup.gif)
 
 
 ## Configure schedule backup 
