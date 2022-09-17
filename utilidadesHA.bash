@@ -210,7 +210,7 @@ fi
 #control de opciones
 contador_parametros=0; while getopts  "hiucb:g:frt:" opcion; do
  case ${opcion} in
-  h) ayuda;;   
+  h) help;;   
 
   i) #opciones
      let contador_parametros=1
