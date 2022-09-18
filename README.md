@@ -46,9 +46,9 @@ utilidadesHA.config is the file to configure your options, you only need to edit
 | USB_ZIGBEE= | If you have a USB zigbee device. Comment if you don't use it. |  /dev/serial/by-id/usb-xxxxxx|
 | FOLDER_BACKUP | Folder backup. Must to exists before use this script | /backup  |
 | RECIPIENT_GPG|  gpg recipient. Comment if you don't use it |  |
-| IMAGE_DOCKER_RPI3| Url where is the HA image available for RPI3 | homeassistant/raspberrypi3-homeassistant  |
-| IMAGE_DOCKER_RPI4| The same for RPI4 | ghcr.io/home-assistant/raspberrypi4-homeassistant |
-| IMAGE_DOCKER_x86_64| The same for x86 64 bits arch |  ghcr.io/home-assistant/home-assistant|
+| IMAGE_DOCKER_RPI3| HA URL image available for RPI3 | homeassistant/raspberrypi3-homeassistant  |
+| IMAGE_DOCKER_RPI4| HA URL image available for RPI4 | ghcr.io/home-assistant/raspberrypi4-homeassistant |
+| IMAGE_DOCKER_x86_64| HA URL image available for x86 64 bits arch |  ghcr.io/home-assistant/home-assistant|
 | TAG_DOCKER| Tag to be used  | stable  |
 | COLOURS | You can choose to have colours when use this script or not. Values: "si" if you wish colours, another value if you don't |  si |
 | FORCE | Is to force upgrade, this value by default is 0. It's used inside script|  0|
