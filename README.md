@@ -10,7 +10,7 @@ A bash script to simplify some maintenance tasks of your Home Assistant Containe
     * Raspberry Pi 4 
     * x86_64
 
-# Options
+# Features
 * Install a new instance of Home Assistant
 * Upgrade Home Assistant to a newest version
 * Create a backup of Home Assistant config folder
