@@ -1,28 +1,65 @@
 #!/bin/bash
 
-# v2 , Author @danieldiazi
+# v2.1 , Author @danieldiazi
+
+MESSAGE_TITLE="utilidadesHA: tools script for HA Container"
+MESSAGE_CONFIG_FAIL="I can't read config .config file "
+MESSAGE_USAGE="Usage"
+MESSAGE_OPTION_INSTALL="Install HA version. If HA is installed, is the same than -u option"
+MESSAGE_OPTION_UPDATE="Update HA version"
+MESSAGE_OPTION_CHECK="Check if exists a new version"
+MESSAGE_OPTION_BACKUP="Create a backup into indicated folder inside: "
+MESSAGE_OPTION_BACKUP_GPG="Create a backup using gpg into indicated folder, inside: "
+MESSAGE_OPTION_BACKUP_RECOVER_GPG="Explain how to recover a gpg backup "
+MESSAGE_OPTION_UPDATE_FORCE="Force an update without check if the available version is already installed"
+MESSAGE_OPTION_UPDATE_FORCE_TAG="Force an update to the image version tagged with tag  (by example 2022.9.0)"
+MESSAGE_OPTION_HELP="Shows this info"
+MESSAGE_INSTALLED="Installed:"
+MESSAGE_UPDATE_PROCESS_VERSION="Updating: "
+MESSAGE_PROCESS_FINISHED="Process finished."
+MESSAGE_FORCE_ENABLED="Force enabled"
+MESSAGE_CREATING="Creating"
+MESSAGE_STOP_CONTAINER="Stopping container"
+MESSAGE_START_CONTAINER="Starting HA container"
+MESSAGE_HARDWARE_NOT_SUPPORTED="Hardware not supported!"
+
+#Detecting system language
+SYSTEM_LANGUAGE=${LANG:0:2}
+myPath=$(dirname "$0") # relative path
+myPath=$(cd "$myPath" && pwd) # full path
+
+
+if [[ -f "${myPath}/locales/${SYSTEM_LANGUAGE}" ]] ; then
+
+source ${myPath}/locales/${SYSTEM_LANGUAGE}
+
+
+fi
+
+
+
 echo "-------------------------------------------"
-echo "utilidadesHA: tools script for HA Container"
+echo "${MESSAGE_TITLE}"
 echo "-------------------------------------------"
 echo ""
 
 
-myPath=$(dirname "$0") # relative path
-myPath=$(cd "$myPath" && pwd) # full path
-if [[ -z "$myPath" ]] ; then
-  LOG="\t${$myPath} doesn't exist. I can't read config .config file"
+
+
+if [[ ! -f "${myPath}/utilidadesHA.config" ]] ; then
+  LOG="${MESSAGE_CONFIG_FAIL} ${myPath}/utilidadesHA.config"
   echo -e $LOG
   #We write on system log
   logger $SCRIPT:$LOG
   exit 1  # fail
+
+else
+  . ${myPath}/utilidadesHA.config 
+
 fi
 
 
-echo Loading config from ${myPath}/utilidadesHA.config
-. ${myPath}/utilidadesHA.config
 
-
-#colores
 if [ $COLOURS == "si" ]; then
 greenColour="\e[0;32m\033[1m"
 endColour="\033[0m\e[0m"
@@ -47,22 +84,32 @@ grayColour=""
 fi
 
 
-#funcion help
+##################
+# HELP FUNCTION  #
+##################
+
 function help () {
 
-echo -e "\n${yellowColour}[+]${endColour} ${grayColour}Usage:${endColour} \n"
-echo -e "\t${redColour}[-i]${endColour}  ${blueColour}Install HA version. If HA is installed, is the same than -u option${endColour}"
-echo -e "\t${redColour}[-u]${endColour}  ${blueColour}Update HA version${endColour}"
-echo -e "\t${redColour}[-c]${endColour}  ${blueColour}Check if exists a new version${endColour}"
-echo -e "\t${redColour}[-b folder]${endColour}  ${blueColour}create a backup into indicated folder (inside $FOLDER_BACKUP)${endColour}"
-echo -e "\t${redColour}[-g folder]${endColour}  ${blueColour}crate a backup using gpg into indicated folder (inside $FOLDER_BACKUP)${endColour}"
-echo -e "\t${redColour}[-r]  ${blueColour}explain how to recover a gpg backup ${endColour}"
-echo -e "\t${redColour}[-f]  ${blueColour}force an update without check if the available version is already installed${endColour}"
-echo -e "\t${redColour}[-t tag] ${blueColour}force an update to the image version tagged with tag  (by example 2022.9.0)${endColour}"
-echo -e "\t${redColour}[-h]${endColour}  ${blueColour}shows this info${endColour}"
+echo -e "\n${yellowColour}[+]${endColour} ${grayColour}${MESSAGE_USAGE}:${endColour} \n"
+echo -e "\t${redColour}[-i]${endColour}  ${blueColour}${MESSAGE_OPTION_INSTALL}${endColour}"
+echo -e "\t${redColour}[-u]${endColour}  ${blueColour}${MESSAGE_OPTION_UPDATE}${endColour}"
+echo -e "\t${redColour}[-c]${endColour}  ${blueColour}${MESSAGE_OPTION_CHECK}${endColour}"
+echo -e "\t${redColour}[-b folder]${endColour}  ${blueColour}${MESSAGE_OPTION_BACKUP}${FOLDER_BACKUP}${endColour}"
+echo -e "\t${redColour}[-g folder]${endColour}  ${blueColour}${MESSAGE_OPTION_BACKUP_GPG}${FOLDER_BACKUP}${endColour}"
+echo -e "\t${redColour}[-r]  ${blueColour}${MESSAGE_OPTION_BACKUP_RECOVER_GPG}${endColour}"
+echo -e "\t${redColour}[-f]  ${blueColour}${MESSAGE_OPTION_UPDATE_FORCE}${endColour}"
+echo -e "\t${redColour}[-t tag] ${blueColour}${MESSAGE_OPTION_UPDATE_FORCE_TAG}${endColour}"
+echo -e "\t${redColour}[-h]${endColour}  ${blueColour}${MESSAGE_OPTION_HELP}${endColour}"
 echo -e "\n"
 exit 1
 }
+
+
+
+##################
+# CHECK HARDWARE #
+##################
+
 
 function checkHardware () {
 
@@ -89,6 +136,10 @@ fi
 
 }
 
+##################
+# CHECK VERSION  #
+##################
+
 function checkVersion () {
 
 #We check this info on home assistant web page
@@ -98,7 +149,7 @@ VERSION_WEB=(`echo $CONTENT | grep -o -P '(?<=Current Version:).*?(?=</h1)' | aw
 #We check installed version
 VERSION_INSTALLED=(`cat $PATH_HA_CONFIG/.HA_VERSION`)
 
-LOG="\tWeb:......${purpleColour}$VERSION_WEB${endColour}\n\tInstalled:${turquoiseColour}$VERSION_INSTALLED ${endColour}"
+LOG="\tWeb:......${purpleColour}$VERSION_WEB${endColour}\n\t${MESSAGE_INSTALLED}${turquoiseColour}$VERSION_INSTALLED ${endColour}"
 echo -e $LOG
 #We write on system log
 logger $SCRIPT:$LOG
@@ -106,8 +157,9 @@ logger $SCRIPT:$LOG
 
 }
 
-
-#proceso de actualizacion
+#####################
+# HA UPDATE PROCESS #
+#####################
 function procesoActualizacion () {
 
 checkVersion
@@ -121,9 +173,9 @@ if [ "$VERSION_WEB" = "$VERSION_INSTALLED" ] && [ $FORCE = "0" ]; then
     
 else
   if [ $FORCE = "1" ]; then
-    LOG="Force update enabled"
+    LOG=${MESSAGE_FORCE_ENABLED}
   else
-   LOG="We will update from $VERSION_INSTALLED to $VERSION_WEB"
+   LOG=" ${MESSAGE_UPDATE_PROCESS_VERSION} $VERSION_INSTALLED  :  $VERSION_WEB"
 
   fi
     echo $SCRIPT:$LOG
@@ -148,66 +200,83 @@ else
 
    
     docker run -d --name="$NAME_CONTAINER" $CADENA_ZIGBEE  --restart unless-stopped -v $PATH_HA_CONFIG:/config $CADENA_HA_MEDIA $CADENA_HA_SSL $CADENA_HA_DBUS -v /etc/localtime:/etc/localtime:ro --net=host $IMAGE_DOCKER:$TAG_DOCKER
-    LOG="Process finished."
+    LOG=${MESSAGE_PROCESS_FINISHED}
     echo $SCRIPT:$LOG
     logger $SCRIPT:$LOG
 
 fi
 }
 
+##################
+# BACKUP PROCESS #
+##################
 
 function procesoBackup() {
  echo $1
  FILE=$(date +"%d%m%y-%H%M")-HA-backup.tgz 
- echo Creating $FILE....
- echo Stoping container
+
+ echo ${MESSAGE_CREATING} $FILE....
+ 
+ echo ${MESSAGE_STOP_CONTAINER}
  docker stop $NAME_CONTAINER
- echo Creating backup...
+ 
+ echo ${MESSAGE_CREATING} backup...
  tar -czf $FOLDER_BACKUP/$1/$FILE $PATH_HA_CONFIG
- echo Generating GPG
+ 
  if [ "$2" == "gpg" ]; then
+  
   gpg --encrypt --recipient $RECIPIENT_GPG $FOLDER_BACKUP/$1/$FILE
   rm  $FOLDER_RAIZ_BACKUP/$1/$FILE
-  chown pi: $FOLDER_BACKUP/$1/$FILE.gpg
-  echo "file $FOLDER_BACKUP/$1/$FILE.gpg created."
+  echo "$FOLDER_BACKUP/$1/$FILE.gpg Ok."
  else
-  echo "file $FOLDER_BACKUP/$1/$FILE created."
+  echo "$FOLDER_BACKUP/$1/$FILE Ok."
  fi
- echo Starting HA container
+ echo ${MESSAGE_START_CONTAINER}
  docker start $NAME_CONTAINER
 
 }
 
-function comoRecuperarBackup() {
-echo "You must to run: gpg --decrypt file.tgz.gpg > backup.tgz and then umcompress"
 
+###################
+# BACKUP GPG INFO #
+###################
+
+function comoRecuperarBackup() {
+ echo "gpg --decrypt file.tgz.gpg > backup.tgz"
 
 }
 
 
-#Inicio del proceso
+
+
+
+##################
+# MAIN           #
+##################
+
+
+
   
 checkHardware
+
+#Choose image
 if [ $HARDWARE == "RPI4" ]; then
  IMAGE_DOCKER=$IMAGE_DOCKER_RPI4
 else
-if [ $HARDWARE == "RPI3" ]; then
- IMAGE_DOCKER=$IMAGE_DOCKER_RPI3
-else
-
-if [ $HARDWARE == "x86_64" ]; then
- IMAGE_DOCKER=$IMAGE_DOCKER_x86_64
-else
-
-echo "Hardware not supported!"
-exit 1
-fi
-fi
-
+ if [ $HARDWARE == "RPI3" ]; then
+  IMAGE_DOCKER=$IMAGE_DOCKER_RPI3
+ else
+  if [ $HARDWARE == "x86_64" ]; then
+   IMAGE_DOCKER=$IMAGE_DOCKER_x86_64
+  else
+   echo ${MESSAGE_HARDWARE_NOT_SUPPORTED}
+   exit 1
+  fi
+ fi
 fi
 
 
-#control de opciones
+#check option
 contador_parametros=0; while getopts  "hiucb:g:frt:" opcion; do
  case ${opcion} in
   h) help;;   
@@ -259,7 +328,7 @@ done
 if [ $contador_parametros -ne 1 ]; then
  help
 else
- echo "Have a nice day!"
+ echo "${MESSAGE_END}"
 fi
 
 
