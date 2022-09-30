@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# v2.1 , Author @danieldiazi
+# v2.11 , Author @danieldiazi
 
 MESSAGE_TITLE="utilidadesHA: tools script for HA Container"
 MESSAGE_CONFIG_FAIL="I can't read config .config file "
