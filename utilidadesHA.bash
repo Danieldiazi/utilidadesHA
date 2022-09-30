@@ -162,7 +162,6 @@ logger $SCRIPT:$LOG
 #####################
 function procesoActualizacion () {
 
-checkVersion
 
 #Si es misma version, no hacemos nada
 if [ "$VERSION_WEB" = "$VERSION_INSTALLED" ] && [ $FORCE = "0" ]; then
@@ -247,6 +246,25 @@ function comoRecuperarBackup() {
 }
 
 
+function newInstall() {
+   echo "$PATH_HA_CONFIG/.HA_VERSION" 
+   if [ -f "$PATH_HA_CONFIG/.HA_VERSION" ]; then
+        echo "Home assistant already installed" 
+     else 
+        if ! [ -d "$DEST" ]; then
+         mkdir -p $PATH_HA_CONFIG
+         mkdir -p $PATH_HA_MEDIA
+        fi
+        FORCE=1
+        procesoActualizacion  
+     fi
+
+     
+
+
+
+}
+
 
 
 
@@ -281,41 +299,47 @@ contador_parametros=0; while getopts  "hiucb:g:frt:" opcion; do
  case ${opcion} in
   h) help;;   
 
-  i) #opciones
+  i) #install new version
      let contador_parametros=1
-     if ! [ -d "$DEST" ]; then
-      mkdir -p $PATH_HA_CONFIG
-      mkdir -p $PATH_HA_MEDIA
-     fi
-     procesoActualizacion;;
+     newInstall;;
+     
     
 
-  u) #opciones
+  u) #upgrade
      let contador_parametros=1
      echo "Starting update process"
+     checkVersion
      procesoActualizacion;;
-  c) let contador_parametros=1
+  c) #check version
+     let contador_parametros=1
      echo "Checking version"
      checkVersion;;
-  b) let contador_parametros=1
+  b) #Create backup
+     let contador_parametros=1
      echo "Create backup"
      procesoBackup $OPTARG;;
-  g) let contador_parametros=1
+  g) #Create backup with gpg
+     let contador_parametros=1
      echo "Backup with gpg option"
      procesoBackup $OPTARG "gpg";;
-  r) let contador_parametros=1
+  r) #how to revover gpg backup
+     let contador_parametros=1
      comoRecuperarBackup;;
 
-  f) let contador_parametros+=1
+  f) #force option
+     let contador_parametros+=1
      echo "force option"
      FORCE=1
+     checkVersion
      procesoActualizacion;;
 
-  t) let contador_parametros+=1
+  t) #update to a choosen tag
+     let contador_parametros+=1
      echo "update to a specified tag"
      FORCE=1 
      TAG_DOCKER=$OPTARG
      echo $TAG_DOCKER
+     checkVersion
      procesoActualizacion;;
      
  esac
