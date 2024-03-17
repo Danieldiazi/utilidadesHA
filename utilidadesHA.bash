@@ -130,6 +130,12 @@ elif [[ $MODEL == *"Raspberry Pi 4"* ]]; then
   echo "Hardware: Raspberry PI 4"
   HARDWARE="RPI4"
 
+elif [[ $MODEL == *"OrangePi Zero3"* ]]; then
+  echo "Hardware: Orange Pi Zero3"
+  HARDWARE="AARCH64"
+
+
+
 fi
 
 fi
@@ -287,8 +293,12 @@ else
   if [ $HARDWARE == "x86_64" ]; then
    IMAGE_DOCKER=$IMAGE_DOCKER_x86_64
   else
-   echo ${MESSAGE_HARDWARE_NOT_SUPPORTED}
-   exit 1
+   if [ $HARDWARE == "AARCH64" ]; then
+     IMAGE_DOCKER=$IMAGE_DOCKER_AARCH64
+   else
+    echo ${MESSAGE_HARDWARE_NOT_SUPPORTED}
+    exit 1
+   fi
   fi
  fi
 fi
