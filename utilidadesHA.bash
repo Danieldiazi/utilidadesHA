@@ -111,6 +111,8 @@ exit 1
 ##################
 
 
+
+
 function checkHardware () {
 
 ARCH=$(arch)
@@ -118,22 +120,23 @@ ARCH=$(arch)
 if [[ $ARCH == "x86_64" ]]; then
  HARDWARE="x86_64"
 else
+ if [[ $ARCH == "aarch64" ]]; then
 
-MODEL=$(tr -d '\0' </proc/device-tree/model);
+   MODEL=$(tr -d '\0' </proc/device-tree/model);
+   if [[ $MODEL == *"Raspberry Pi 3"* ]]; then
+     echo "Hardware: Raspberry PI 3"
+     HARDWARE="RPI3"
+   elif [[ $MODEL == *"Raspberry Pi 4"* ]]; then
+     echo "Hardware: Raspberry PI 4"
+     HARDWARE="RPI4"
+   elif [[ $MODEL == *"OrangePi Zero3"* ]]; then
+     echo "Hardware: Orange Pi Zero3"
+     HARDWARE="aarch64"
+   else
+     HARDWARE="aarch64"
 
 
-if [[ $MODEL == *"Raspberry Pi 3"* ]]; then
-  echo "Hardware: Raspberry PI 3"
-  HARDWARE="RPI3"
-
-elif [[ $MODEL == *"Raspberry Pi 4"* ]]; then
-  echo "Hardware: Raspberry PI 4"
-  HARDWARE="RPI4"
-
-elif [[ $MODEL == *"OrangePi Zero3"* ]]; then
-  echo "Hardware: Orange Pi Zero3"
-  HARDWARE="AARCH64"
-
+fi
 
 
 fi
@@ -141,6 +144,7 @@ fi
 fi
 
 }
+
 
 ##################
 # CHECK VERSION  #
@@ -283,6 +287,7 @@ function newInstall() {
   
 checkHardware
 
+
 #Choose image
 if [ $HARDWARE == "RPI4" ]; then
  IMAGE_DOCKER=$IMAGE_DOCKER_RPI4
@@ -293,8 +298,8 @@ else
   if [ $HARDWARE == "x86_64" ]; then
    IMAGE_DOCKER=$IMAGE_DOCKER_x86_64
   else
-   if [ $HARDWARE == "AARCH64" ]; then
-     IMAGE_DOCKER=$IMAGE_DOCKER_AARCH64
+   if [ $HARDWARE == "aarch64" ]; then
+     IMAGE_DOCKER=$IMAGE_DOCKER_aarch64
    else
     echo ${MESSAGE_HARDWARE_NOT_SUPPORTED}
     exit 1
@@ -302,6 +307,7 @@ else
   fi
  fi
 fi
+
 
 
 #check option
