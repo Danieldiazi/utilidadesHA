@@ -1,98 +1,103 @@
 # utilidadesHA
-A bash script to simplify some maintenance tasks of your Home Assistant Container.
+Es un script que simplifica las tareas con la versión de contenedor de Home Assistant
 ![imagen](https://user-images.githubusercontent.com/3638478/190757510-334883cf-4c50-44f4-b451-5c22b961e649.png)
 
-# Requeriments
-* Docker installed
-* A Compatible hardware
-  * Tested:
+Para mi es cómodo, porque no tengo más que usarlo cada vez que quiero actualizar o instalarlo. Y puedo además programar tareas con el crontab para hacer backups periódicos.
+
+# Requerimientos
+* Docker instalado
+* Un hardware compatible
+  * Testeado:
     * Raspberry Pi 3
     * Raspberry Pi 4 
     * x86_64
+    * Orange Pi Zero3
 
-# Features
-* Install a new instance of Home Assistant
-* Upgrade Home Assistant to a newest version
-* Create a backup of Home Assistant config folder
- * Also option for use GPG
-* Check if exists a new version
-* Force update even if there aren't a new version
-* Upgrade to image version tagged with a specific tag 
+# Funcionalidades
+* Instala una nueva instancia de Home Assistant
+* Actualiza Home Assistant a una versión nueva
+* Hace un backup de la carpeta de Home Assistant
+* Comprueba si hay una nueva versión
+* Permite forzar la actualización incluso si no hay nueva versión (Actualiza sobre la misma)
+* Permite actualizar indicando la etiqueta de la versión (ej: 2023.4.0) 
 
-# Installation
-* Download utilidadesHA.bash and utilidadesHA.config to your prefered folder whitin your computer with docker installed.
-* On your prefered terminal, set permission of execution to utilidadesHA.bash
+# Instalación
+* En "Releases" descargate utilidadesHA.zip en una carpeta en tu servidor de Home Assistant (ej: /opt/utilidadesHA)
+* Dale permisos de ejecución
    ```bash
      chmod u+x utilidadesHA.bash
     ```
-    
-# Getting Started
-* Run it! 
+
+# Primeros pasos
+* Ejecútalo! 
    ```bash
      ./utilidadesHA.bash
    ```
-# Config
-utilidadesHA.config is the file to configure your options, you only need to edit it and change what you want.
+Ahí verás las opciones que hay.
 
-| PARAMETER | DESCRIPTION | EXAMPLE |
-| ------------- | ------------- | ------------- |
-| PATH_HA_CONFIG | HA config folder | /srv/ha/hass-config |
-| PATH_HA_MEDIA | HA Media folder | /srv/ha/hass-media |
-| PATH_HA_SSL | HA SSL folder. Blank if you don't use it.|  |
-| PATH_HA_SSL_CONTAINER=| HA SSL container folder. Blank if you don't use it.|  |
-| PATH_HA_DBUS | In order to use Bluetooth integration |  /run/dbus|
-| PATH_HA_DBUS_CONTAINER| In order to use Bluetooth integration  | /run/dbus |
-| NAME_CONTAINER | Name of Home Assitante container managed by this script  | home-assistant |
-| USB_ZIGBEE= | If you have a USB zigbee device. Comment if you don't use it. |  /dev/serial/by-id/usb-xxxxxx|
-| FOLDER_BACKUP | Folder backup. Must to exists before use this script | /backup  |
-| RECIPIENT_GPG|  gpg recipient. Comment if you don't use it |  |
-| IMAGE_DOCKER_RPI3| HA URL image available for RPI3 | homeassistant/raspberrypi3-homeassistant  |
-| IMAGE_DOCKER_RPI4| HA URL image available for RPI4 | ghcr.io/home-assistant/raspberrypi4-homeassistant |
-| IMAGE_DOCKER_x86_64| HA URL image available for x86 64 bits arch |  ghcr.io/home-assistant/home-assistant|
-| TAG_DOCKER| Tag to be used  | stable  |
-| COLOURS | You can choose to have colours when use this script or not. Values: "si" if you wish colours, another value if you don't |  si |
-| FORCE | Is to force upgrade, this value by default is 0. It's used inside script|  0|
+* Si aún no está instalado HA, usa la opción -i. Creará la carpeta dónde se va a almacenar la configuración de HA. Esa carpeta la puedes cambiar en el fichero .config. Por defecto se guarda en /srv/ha/hass-config para el caso de la carpeta de configuración.
 
+   ```bash
+     ./utilidadesHA.bash -i
+   ```
 
-# Usage
+# Uso
 
-| OPTION | DESCRIPTION |
+| OPCIÓN | DESCRIPCIÓN |
 | ------ | ----------- |
-|  -i | Install HA version. If HA is installed, is the same than -u option | 
-|  -u |  Update HA version |
-|  -c |  Check if exists a new version |
-|  -b X |  create a backup into indicated folder "X" (inside FOLDER_BACKUP variable). Destination folder "X" must exist.|
-|  -g Y |  create a backup using gpg into indicated folder "Y" (inside FOLDER_BACKUP variable) Destination folder "Y" must exist. |
-|  -r |  explain how to recover a gpg backup|
-|  -f |  force an update without check if the available version is already installed |
-|  -t tag|  force an update to the image version tagged with tag  (by example 2022.9.0)|
-|  -h |  shows this info  |
+|  -i | Instala HA. Crea las carpetas si lo necesita | 
+|  -u |  Actualiza HA |
+|  -c |  Comprueba y muestra por pantalla la información de versión local y la existente en la web |
+|  -b X |  Crea un backup en la carpeta "X" (dentro a su vez de la variable FOLDER_BACKUP). Debe existir.|
+|  -g X |  Crea un backup con gpg en la carpeta "X" (dentro a su vez de la variable FOLDER_BACKUP). Debe existir.|
+|  -r |  explica como recuperar de un backup gpg|
+|  -f |  fuerza a actualizar incluso si no hay nueva versión|
+|  -t tag|  actualiza a la versión indicada en la etiqueta  (por ejemplo 2022.9.0)|
 
 
-	
-
-## Show options / help
-Only run script without options or add -h option
-   ```bash
-     ./utilidadesHA.bash
-   ```
-## Upgrade HA version
+## Ejemplo de actualizar HA
 ![Upgrade](https://github.com/Danieldiazi/utilidadesHA/blob/22be384cdac801e6696830ca026e9e3997c0bb6c/docs/upgrade.gif)
-## Check new version
-Option "-u" check if exists a new version. It only checks info from html code on home assistant webpage.
+## Chequear nueva versión
+Sólo chequea contra la información que se muestra en la página de HA. Puede que en la página ya anuncien nueva versión y no haya imagen disponible.
 
-## Upgrade to a specified tag
+## Uso de actualizar a una etiqueta determinada
 ![Tag](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/tag.gif)
 
 
 ## Backup
-In order to create a backup, the user running this command need to have permissions on all files into /config folder.
+Ten en cuenta que el usuario con el que hace backup debe tener permisos en la carpeta de configuración.
 ![Backup](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/backup.gif)
 
 
-## Configure schedule backup 
+# Configuración
+En utilidadesHA.config puedes cambiar las configuraciones que necesites. 
 
-You can see this examples if you wish to add it in crontab
+| PARAMETER | DESCRIPTION | EJEMPLO |
+| ------------- | ------------- | ------------- |
+| PATH_HA_CONFIG | Carpeta de configuración HA  | /srv/ha/hass-config |
+| PATH_HA_MEDIA | Carpeta de mediso de HA | /srv/ha/hass-media |
+| PATH_HA_SSL | Carpeta HA SSL. Déjala en blanco si no la usas. |  |
+| PATH_HA_SSL_CONTAINER=| carpeta del contenedor HA SSL. Déjala en blanco si no la usas.|  |
+| PATH_HA_DBUS | Para que funcione la integración Bluetooth |  /run/dbus|
+| PATH_HA_DBUS_CONTAINER| Para que funcione la integración Bluetooth  | /run/dbus |
+| NAME_CONTAINER | Nombre que tendrá el contenedor  | home-assistant |
+| USB_ZIGBEE= | Si tienes un dispositivo Zigbee por USB. Coméntalo si no lo usas. |  /dev/serial/by-id/usb-xxxxxx|
+| FOLDER_BACKUP | Carpeta donde guardar el backup. Debes crearla previamente para poder usarla | /backup  |
+| RECIPIENT_GPG|  Recipiente gpg  |  |
+| IMAGE_DOCKER_RPI3| La imagen para RPI3 | homeassistant/raspberrypi3-homeassistant  |
+| IMAGE_DOCKER_RPI4| La imagen para RPI4 | ghcr.io/home-assistant/raspberrypi4-homeassistant |
+| IMAGE_DOCKER_x86_64| La imagen para x86_64 |  ghcr.io/home-assistant/home-assistant|
+| IMAGE_DOCKER_aarch64| La imagen para aarch64 |  ghcr.io/home-assistant/home-assistant|
+| TAG_DOCKER| Tag a usar en la instalación.  | stable  |
+| COLOURS | Si quieres que este script se muestre o no con colores."si" si es así. |  si |
+| FORCE | Para forzar la actualizción. 1 que si, 0 que no|  0|
+
+
+
+
+	
+
+## Programar el backup con crontab
 
 ```
 #At 02:00 once a week, backup to folder "weekly" inside folder defined by FOLDER_BACKUP
