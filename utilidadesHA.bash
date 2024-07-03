@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# v2.11 , Author @danieldiazi
+# v2.2 , Author @danieldiazi
 
 MESSAGE_TITLE="utilidadesHA: tools script for HA Container"
 MESSAGE_CONFIG_FAIL="I can't read config .config file "
@@ -151,10 +151,8 @@ fi
 ##################
 
 function checkVersion () {
-
-#We check this info on home assistant web page
-CONTENT=$(curl -s -L https://www.home-assistant.io/)
-VERSION_WEB=(`echo $CONTENT | grep -o -P '(?<=Current Version:).*?(?=</h1)' | awk '{$1=$1};1' `)
+docker pull $IMAGE_DOCKER:$TAG_DOCKER 2>/dev/null
+VERSION_WEB=$(docker image inspect $IMAGE_DOCKER:$TAG_DOCKER --format '{{ index .Config.Labels "io.hass.version" }}')
 
 #We check installed version
 VERSION_INSTALLED=(`cat $PATH_HA_CONFIG/.HA_VERSION`)
@@ -166,6 +164,7 @@ logger $SCRIPT:$LOG
 
 
 }
+
 
 #####################
 # HA UPDATE PROCESS #
