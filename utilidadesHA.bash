@@ -27,11 +27,12 @@ MESSAGE_HARDWARE_NOT_SUPPORTED="Hardware not supported!"
 SYSTEM_LANGUAGE=${LANG:0:2}
 myPath=$(dirname "$0") # relative path
 myPath=$(cd "$myPath" && pwd) # full path
+SCRIPT=$(basename "$0")
 
 
 if [[ -f "${myPath}/locales/${SYSTEM_LANGUAGE}" ]] ; then
 
-source ${myPath}/locales/${SYSTEM_LANGUAGE}
+source "${myPath}/locales/${SYSTEM_LANGUAGE}"
 
 
 fi
@@ -48,19 +49,19 @@ echo ""
 
 if [[ ! -f "${myPath}/utilidadesHA.config" ]] ; then
   LOG="${MESSAGE_CONFIG_FAIL} ${myPath}/utilidadesHA.config"
-  echo -e $LOG
+  echo -e "$LOG"
   #We write on system log
-  logger $SCRIPT:$LOG
+  logger "$SCRIPT:$LOG"
   exit 1  # fail
 
 else
-  . ${myPath}/utilidadesHA.config 
+  . "${myPath}/utilidadesHA.config" 
 
 fi
 
 
 
-if [ $COLOURS == "si" ]; then
+if [[ "${COLOURS:-}" == "si" ]]; then
 greenColour="\e[0;32m\033[1m"
 endColour="\033[0m\e[0m"
 redColour="\e[0;31m\033[1m"
@@ -115,21 +116,21 @@ exit 1
 
 function checkHardware () {
 
-ARCH=$(arch)
+ARCH=$(uname -m)
 
-if [[ $ARCH == "x86_64" ]]; then
+if [[ "$ARCH" == "x86_64" ]]; then
  HARDWARE="x86_64"
 else
- if [[ $ARCH == "aarch64" ]]; then
+ if [[ "$ARCH" == "aarch64" ]]; then
 
    MODEL=$(tr -d '\0' </proc/device-tree/model);
-   if [[ $MODEL == *"Raspberry Pi 3"* ]]; then
+   if [[ "$MODEL" == *"Raspberry Pi 3"* ]]; then
      echo "Hardware: Raspberry PI 3"
      HARDWARE="RPI3"
-   elif [[ $MODEL == *"Raspberry Pi 4"* ]]; then
+   elif [[ "$MODEL" == *"Raspberry Pi 4"* ]]; then
      echo "Hardware: Raspberry PI 4"
      HARDWARE="RPI4"
-   elif [[ $MODEL == *"OrangePi Zero3"* ]]; then
+   elif [[ "$MODEL" == *"OrangePi Zero3"* ]]; then
      echo "Hardware: Orange Pi Zero3"
      HARDWARE="aarch64"
    else
@@ -151,16 +152,16 @@ fi
 ##################
 
 function checkVersion () {
-docker pull $IMAGE_DOCKER:$TAG_DOCKER 2>/dev/null
-VERSION_WEB=$(docker image inspect $IMAGE_DOCKER:$TAG_DOCKER --format '{{ index .Config.Labels "io.hass.version" }}')
+docker pull "$IMAGE_DOCKER:$TAG_DOCKER" 2>/dev/null
+VERSION_WEB=$(docker image inspect "$IMAGE_DOCKER:$TAG_DOCKER" --format '{{ index .Config.Labels "io.hass.version" }}')
 
 #We check installed version
-VERSION_INSTALLED=(`cat $PATH_HA_CONFIG/.HA_VERSION`)
+VERSION_INSTALLED=$(cat "$PATH_HA_CONFIG/.HA_VERSION")
 
 LOG="\tWeb:......${purpleColour}$VERSION_WEB${endColour}\n\t${MESSAGE_INSTALLED}${turquoiseColour}$VERSION_INSTALLED ${endColour}"
-echo -e $LOG
+echo -e "$LOG"
 #We write on system log
-logger $SCRIPT:$LOG
+logger "$SCRIPT:$LOG"
 
 
 }
@@ -173,44 +174,42 @@ function procesoActualizacion () {
 
 
 #Si es misma version, no hacemos nada
-if [ "$VERSION_WEB" = "$VERSION_INSTALLED" ] && [ $FORCE = "0" ]; then
+if [[ "$VERSION_WEB" == "$VERSION_INSTALLED" && "${FORCE:-0}" == "0" ]]; then
     LOG="Same version."
-    echo $SCRIPT:$LOG
-    logger $SCRIPT:$LOG
+    echo "$SCRIPT:$LOG"
+    logger "$SCRIPT:$LOG"
 
     
 else
-  if [ $FORCE = "1" ]; then
+  if [[ "${FORCE:-0}" == "1" ]]; then
     LOG=${MESSAGE_FORCE_ENABLED}
   else
    LOG=" ${MESSAGE_UPDATE_PROCESS_VERSION} $VERSION_INSTALLED  :  $VERSION_WEB"
 
   fi
-    echo $SCRIPT:$LOG
-    logger $SCRIPT:$LOG
+    echo "$SCRIPT:$LOG"
+    logger "$SCRIPT:$LOG"
 
     #Pull new image
-    docker pull $IMAGE_DOCKER:$TAG_DOCKER
+    docker pull "$IMAGE_DOCKER:$TAG_DOCKER"
 
     #stop HA container
-    docker stop $NAME_CONTAINER
+    docker stop "$NAME_CONTAINER"
 
     #Delete HA container
-    docker rm $NAME_CONTAINER
+    docker rm "$NAME_CONTAINER"
 
     #Options to add
-    if [ ! -z  $USB_ZIGBEE  ] ; then CADENA_ZIGBEE="--device=$USB_ZIGBEE"; else CADENA_ZIGBEE=""; fi
-    if [ ! -z  $PATH_HA_MEDIA  ] ; then CADENA_HA_MEDIA="-v $PATH_HA_MEDIA:/media"; else CADENA_HA_MEDIA=""; fi
-    if [ ! -z  $PATH_HA_SSL  ] && [ ! -z  $PATH_HA_SSL_CONTAINER ] ; then CADENA_HA_SSL="-v $PATH_HA_SSL:$PATH_HA_SSL_CONTAINER"; else CADENA_HA_SSL=""; fi
-    if [ ! -z  $PATH_HA_DBUS  ] && [ ! -z  $PATH_HA_DBUS_CONTAINER ] ; then CADENA_HA_DBUS="-v $PATH_HA_DBUS:$PATH_HA_DBUS_CONTAINER:ro"; else CADENA_HA_DBUS=""; fi
+    docker_args=( -d --name="$NAME_CONTAINER" --restart unless-stopped -v "$PATH_HA_CONFIG:/config" -v /etc/localtime:/etc/localtime:ro --net=host )
+    if [[ -n "${USB_ZIGBEE:-}" ]] ; then docker_args+=( "--device=$USB_ZIGBEE" ); fi
+    if [[ -n "${PATH_HA_MEDIA:-}" ]] ; then docker_args+=( -v "$PATH_HA_MEDIA:/media" ); fi
+    if [[ -n "${PATH_HA_SSL:-}" && -n "${PATH_HA_SSL_CONTAINER:-}" ]] ; then docker_args+=( -v "$PATH_HA_SSL:$PATH_HA_SSL_CONTAINER" ); fi
+    if [[ -n "${PATH_HA_DBUS:-}" && -n "${PATH_HA_DBUS_CONTAINER:-}" ]] ; then docker_args+=( -v "$PATH_HA_DBUS:$PATH_HA_DBUS_CONTAINER:ro" ); fi
 
-
-
-   
-    docker run -d --name="$NAME_CONTAINER" $CADENA_ZIGBEE  --restart unless-stopped -v $PATH_HA_CONFIG:/config $CADENA_HA_MEDIA $CADENA_HA_SSL $CADENA_HA_DBUS -v /etc/localtime:/etc/localtime:ro --net=host $IMAGE_DOCKER:$TAG_DOCKER
+    docker run "${docker_args[@]}" "$IMAGE_DOCKER:$TAG_DOCKER"
     LOG=${MESSAGE_PROCESS_FINISHED}
-    echo $SCRIPT:$LOG
-    logger $SCRIPT:$LOG
+    echo "$SCRIPT:$LOG"
+    logger "$SCRIPT:$LOG"
 
 fi
 }
@@ -220,27 +219,27 @@ fi
 ##################
 
 function procesoBackup() {
- echo $1
- FILE=$(date +"%d%m%y-%H%M")-HA-backup.tgz 
+ echo "$1"
+ FILE="$(date +"%d%m%y-%H%M")-HA-backup.tgz" 
 
- echo ${MESSAGE_CREATING} $FILE....
+ echo "${MESSAGE_CREATING} $FILE...."
  
  echo ${MESSAGE_STOP_CONTAINER}
- docker stop $NAME_CONTAINER
+ docker stop "$NAME_CONTAINER"
  
  echo ${MESSAGE_CREATING} backup...
- tar -czf $FOLDER_BACKUP/$1/$FILE $PATH_HA_CONFIG
+ tar -czf "$FOLDER_BACKUP/$1/$FILE" "$PATH_HA_CONFIG"
  
  if [ "$2" == "gpg" ]; then
   
-  gpg --encrypt --recipient $RECIPIENT_GPG $FOLDER_BACKUP/$1/$FILE
-  rm  $FOLDER_RAIZ_BACKUP/$1/$FILE
+  gpg --encrypt --recipient "$RECIPIENT_GPG" "$FOLDER_BACKUP/$1/$FILE"
+  rm "$FOLDER_BACKUP/$1/$FILE"
   echo "$FOLDER_BACKUP/$1/$FILE.gpg Ok."
  else
   echo "$FOLDER_BACKUP/$1/$FILE Ok."
  fi
  echo ${MESSAGE_START_CONTAINER}
- docker start $NAME_CONTAINER
+ docker start "$NAME_CONTAINER"
 
 }
 
@@ -261,8 +260,8 @@ function newInstall() {
         echo "Home assistant already installed" 
      else 
         if ! [ -d "$DEST" ]; then
-         mkdir -p $PATH_HA_CONFIG
-         mkdir -p $PATH_HA_MEDIA
+         mkdir -p "$PATH_HA_CONFIG"
+         mkdir -p "$PATH_HA_MEDIA"
         fi
         FORCE=1
         procesoActualizacion  
@@ -288,16 +287,16 @@ checkHardware
 
 
 #Choose image
-if [ $HARDWARE == "RPI4" ]; then
+if [[ "$HARDWARE" == "RPI4" ]]; then
  IMAGE_DOCKER=$IMAGE_DOCKER_RPI4
 else
- if [ $HARDWARE == "RPI3" ]; then
+ if [[ "$HARDWARE" == "RPI3" ]]; then
   IMAGE_DOCKER=$IMAGE_DOCKER_RPI3
  else
-  if [ $HARDWARE == "x86_64" ]; then
+  if [[ "$HARDWARE" == "x86_64" ]]; then
    IMAGE_DOCKER=$IMAGE_DOCKER_x86_64
   else
-   if [ $HARDWARE == "aarch64" ]; then
+   if [[ "$HARDWARE" == "aarch64" ]]; then
      IMAGE_DOCKER=$IMAGE_DOCKER_aarch64
    else
     echo ${MESSAGE_HARDWARE_NOT_SUPPORTED}
