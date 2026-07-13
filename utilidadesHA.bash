@@ -39,7 +39,7 @@ fi
 
 
 
-echo "-------------------------------------------"
+ echo "-------------------------------------------"
 echo "${MESSAGE_TITLE}"
 echo "-------------------------------------------"
 echo ""
@@ -255,22 +255,26 @@ function comoRecuperarBackup() {
 
 
 function newInstall() {
-   echo "$PATH_HA_CONFIG/.HA_VERSION" 
+   echo "$PATH_HA_CONFIG/.HA_VERSION"
+
+   if [[ -z "${PATH_HA_CONFIG:-}" ]]; then
+        echo "PATH_HA_CONFIG is not configured"
+        return 1
+   fi
+
+   if [[ -z "${PATH_HA_MEDIA:-}" ]]; then
+        echo "PATH_HA_MEDIA is not configured"
+        return 1
+   fi
+
    if [ -f "$PATH_HA_CONFIG/.HA_VERSION" ]; then
-        echo "Home assistant already installed" 
-     else 
-        if ! [ -d "$DEST" ]; then
-         mkdir -p "$PATH_HA_CONFIG"
-         mkdir -p "$PATH_HA_MEDIA"
-        fi
+        echo "Home assistant already installed"
+   else
+        mkdir -p "$PATH_HA_CONFIG"
+        mkdir -p "$PATH_HA_MEDIA"
         FORCE=1
-        procesoActualizacion  
-     fi
-
-     
-
-
-
+        procesoActualizacion
+   fi
 }
 
 
@@ -305,6 +309,7 @@ else
   fi
  fi
 fi
+
 
 
 
@@ -368,6 +373,3 @@ if [ $contador_parametros -ne 1 ]; then
 else
  echo "${MESSAGE_END}"
 fi
-
-
-
