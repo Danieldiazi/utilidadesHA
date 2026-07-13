@@ -1,108 +1,111 @@
 # utilidadesHA
-Es un script que simplifica las tareas con la versión de contenedor de Home Assistant
-![imagen](https://user-images.githubusercontent.com/3638478/190757510-334883cf-4c50-44f4-b451-5c22b961e649.png)
 
-Para mi es cómodo, porque no tengo más que usarlo cada vez que quiero actualizar o instalarlo. Y puedo además programar tareas con el crontab para hacer backups periódicos.
+Script Bash para instalar, actualizar y respaldar Home Assistant Container mediante Docker.
 
-# Requerimientos
-* Docker instalado
-* Un hardware compatible
-  * Testeado:
-    * Raspberry Pi 3
-    * Raspberry Pi 4 
-    * x86_64
-    * Orange Pi Zero3
+## Requisitos
 
-# Funcionalidades
-* Instala una nueva instancia de Home Assistant
-* Actualiza Home Assistant a una versión nueva
-* Hace un backup de la carpeta de Home Assistant
-* Comprueba si hay una nueva versión
-* Permite forzar la actualización incluso si no hay nueva versión (Actualiza sobre la misma)
-* Permite actualizar indicando la etiqueta de la versión (ej: 2023.4.0) 
+- Bash 4 o superior.
+- Docker instalado y accesible para el usuario que ejecuta el script.
+- `flock` para impedir ejecuciones simultáneas.
+- `tar` para las copias de seguridad.
+- GnuPG únicamente para las copias cifradas.
+- Arquitectura `x86_64` o `aarch64`/`arm64`. Está probado en Raspberry Pi 3, Raspberry Pi 4 y Orange Pi Zero 3.
 
-# Instalación
-* En "Releases" descargate utilidadesHA.zip en una carpeta en tu servidor de Home Assistant (ej: /opt/utilidadesHA)
-* Dale permisos de ejecución
-   ```bash
-     chmod u+x utilidadesHA.bash
-    ```
+## Funciones
 
-# Primeros pasos
-* Ejecútalo! 
-   ```bash
-     ./utilidadesHA.bash
-   ```
-Ahí verás las opciones que hay.
+- Instalación inicial de Home Assistant Container.
+- Actualización a la etiqueta estable o a una etiqueta concreta.
+- Comparación de la versión instalada con la disponible.
+- Rollback automático cuando el contenedor nuevo no arranca.
+- Backup de la configuración con reinicio garantizado del contenedor.
+- Backup cifrado con GPG.
+- Bloqueo para evitar que coincidan una actualización y un backup.
+- Modo `--dry-run` para mostrar operaciones sin ejecutarlas.
 
-* Si aún no está instalado HA, usa la opción -i. Creará la carpeta dónde se va a almacenar la configuración de HA. Esa carpeta la puedes cambiar en el fichero .config. Por defecto se guarda en /srv/ha/hass-config para el caso de la carpeta de configuración.
+## Instalación
 
-   ```bash
-     ./utilidadesHA.bash -i
-   ```
+Descarga la versión publicada, extrae los archivos y concede permisos de ejecución:
 
-# Uso
-
-| OPCIÓN | DESCRIPCIÓN |
-| ------ | ----------- |
-|  -i | Instala HA. Crea las carpetas si lo necesita | 
-|  -u |  Actualiza HA |
-|  -c |  Comprueba y muestra por pantalla la información de versión local y la existente en la web |
-|  -b X |  Crea un backup en la carpeta "X" (dentro a su vez de la variable FOLDER_BACKUP). Debe existir.|
-|  -g X |  Crea un backup con gpg en la carpeta "X" (dentro a su vez de la variable FOLDER_BACKUP). Debe existir.|
-|  -r |  explica como recuperar de un backup gpg|
-|  -f |  fuerza a actualizar incluso si no hay nueva versión|
-|  -t tag|  actualiza a la versión indicada en la etiqueta  (por ejemplo 2022.9.0)|
-
-
-## Ejemplo de actualizar HA
-![Upgrade](https://github.com/Danieldiazi/utilidadesHA/blob/22be384cdac801e6696830ca026e9e3997c0bb6c/docs/upgrade.gif)
-## Chequear nueva versión
-Sólo chequea contra la información que se muestra en la página de HA. Puede que en la página ya anuncien nueva versión y no haya imagen disponible.
-
-## Uso de actualizar a una etiqueta determinada
-![Tag](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/tag.gif)
-
-
-## Backup
-Ten en cuenta que el usuario con el que hace backup debe tener permisos en la carpeta de configuración.
-![Backup](https://github.com/Danieldiazi/utilidadesHA/blob/665f912e944af21f0840d3d4d82ec16ef0080054/docs/backup.gif)
-
-
-# Configuración
-En utilidadesHA.config puedes cambiar las configuraciones que necesites. 
-
-| PARAMETER | DESCRIPTION | EJEMPLO |
-| ------------- | ------------- | ------------- |
-| PATH_HA_CONFIG | Carpeta de configuración HA  | /srv/ha/hass-config |
-| PATH_HA_MEDIA | Carpeta de mediso de HA | /srv/ha/hass-media |
-| PATH_HA_SSL | Carpeta HA SSL. Déjala en blanco si no la usas. |  |
-| PATH_HA_SSL_CONTAINER=| carpeta del contenedor HA SSL. Déjala en blanco si no la usas.|  |
-| PATH_HA_DBUS | Para que funcione la integración Bluetooth |  /run/dbus|
-| PATH_HA_DBUS_CONTAINER| Para que funcione la integración Bluetooth  | /run/dbus |
-| NAME_CONTAINER | Nombre que tendrá el contenedor  | home-assistant |
-| USB_ZIGBEE= | Si tienes un dispositivo Zigbee por USB. Coméntalo si no lo usas. |  /dev/serial/by-id/usb-xxxxxx|
-| FOLDER_BACKUP | Carpeta donde guardar el backup. Debes crearla previamente para poder usarla | /backup  |
-| RECIPIENT_GPG|  Recipiente gpg  |  |
-| IMAGE_DOCKER_RPI3| La imagen para RPI3 | homeassistant/raspberrypi3-homeassistant  |
-| IMAGE_DOCKER_RPI4| La imagen para RPI4 | ghcr.io/home-assistant/raspberrypi4-homeassistant |
-| IMAGE_DOCKER_x86_64| La imagen para x86_64 |  ghcr.io/home-assistant/home-assistant|
-| IMAGE_DOCKER_aarch64| La imagen para aarch64 |  ghcr.io/home-assistant/home-assistant|
-| TAG_DOCKER| Tag a usar en la instalación.  | stable  |
-| COLOURS | Si quieres que este script se muestre o no con colores."si" si es así. |  si |
-| FORCE | Para forzar la actualizción. 1 que si, 0 que no|  0|
-
-
-
-
-	
-
-## Programar el backup con crontab
-
+```bash
+chmod u+x utilidadesHA.bash
 ```
-#At 02:00 once a week, backup to folder "weekly" inside folder defined by FOLDER_BACKUP
-0 2 * * 1 /opt/scripts/utilidades-HA.bash -b weekly
-#At 03:00 every day, backup to folder "diario" inside folder defined by FOLDER_BACKUP
-0 3 * * * /opt/scripts/utilidades-HA.bash -b diario
-```  
 
+Edita `utilidadesHA.config` antes de la primera ejecución.
+
+## Uso
+
+| Opción | Descripción |
+| --- | --- |
+| `-i` | Instala Home Assistant. Si ya está instalado, ejecuta una actualización forzada. |
+| `-u` | Actualiza Home Assistant. |
+| `-c` | Muestra la versión instalada y la disponible. |
+| `-b CARPETA` | Crea un backup dentro de `FOLDER_BACKUP/CARPETA`. La carpeta debe existir. |
+| `-g CARPETA` | Crea un backup cifrado con GPG. |
+| `-r` | Muestra cómo descifrar un backup GPG. |
+| `-f` | Fuerza la actualización aunque la versión sea la misma. |
+| `-t ETIQUETA` | Actualiza a una etiqueta concreta. |
+| `--dry-run` | Muestra las operaciones que modificarían el sistema sin ejecutarlas. |
+| `-h`, `--help` | Muestra la ayuda. |
+
+Ejemplos:
+
+```bash
+./utilidadesHA.bash -i
+./utilidadesHA.bash -u
+./utilidadesHA.bash -u -f
+./utilidadesHA.bash -u -t 2026.7.1
+./utilidadesHA.bash -b diario
+./utilidadesHA.bash -g semanal
+./utilidadesHA.bash -u --dry-run
+```
+
+Por compatibilidad, `-f` y `-t ETIQUETA` también inician una actualización aunque no se indique `-u`.
+
+## Seguridad durante la actualización
+
+Antes de reemplazar el contenedor, el script conserva el identificador de la imagen anterior. Después de crear el contenedor nuevo comprueba que esté en ejecución. Si falla, elimina el contenedor defectuoso y vuelve a crear el anterior con los mismos volúmenes y dispositivos.
+
+El rollback protege el contenedor, pero no sustituye a una copia de seguridad de la configuración.
+
+## Copias de seguridad
+
+El subdirectorio indicado debe existir dentro de `FOLDER_BACKUP` y ser escribible. El script detiene Home Assistant solamente si estaba en ejecución y registra una función de limpieza para volver a iniciarlo aunque `tar` o GPG fallen.
+
+Para descifrar una copia:
+
+```bash
+gpg --decrypt archivo.tgz.gpg > backup.tgz
+```
+
+## Configuración
+
+| Variable | Descripción | Ejemplo |
+| --- | --- | --- |
+| `PATH_HA_CONFIG` | Carpeta de configuración de Home Assistant. Debe ser una ruta absoluta. | `/srv/ha/hass-config` |
+| `PATH_HA_MEDIA` | Carpeta de medios. | `/srv/ha/hass-media` |
+| `PATH_HA_SSL` | Carpeta SSL del host. | `/srv/ha/ssl` |
+| `PATH_HA_SSL_CONTAINER` | Ruta SSL dentro del contenedor. | `/ssl` |
+| `PATH_HA_DBUS` | Socket DBus del host para Bluetooth. | `/run/dbus` |
+| `PATH_HA_DBUS_CONTAINER` | Ruta DBus dentro del contenedor. | `/run/dbus` |
+| `NAME_CONTAINER` | Nombre del contenedor. | `home-assistant` |
+| `USB_ZIGBEE` | Dispositivo USB Zigbee opcional. | `/dev/serial/by-id/usb-...` |
+| `FOLDER_BACKUP` | Carpeta raíz de backups. | `/backup` |
+| `RECIPIENT_GPG` | Identificador del destinatario GPG. | `usuario@example.com` |
+| `IMAGE_DOCKER_RPI3` | Imagen para Raspberry Pi 3. | `homeassistant/raspberrypi3-homeassistant` |
+| `IMAGE_DOCKER_RPI4` | Imagen para Raspberry Pi 4. | `ghcr.io/home-assistant/raspberrypi4-homeassistant` |
+| `IMAGE_DOCKER_x86_64` | Imagen para x86-64. | `ghcr.io/home-assistant/home-assistant` |
+| `IMAGE_DOCKER_aarch64` | Imagen para ARM64 genérico. | `ghcr.io/home-assistant/home-assistant` |
+| `TAG_DOCKER` | Etiqueta predeterminada. | `stable` |
+| `FORCE` | Fuerza la actualización cuando vale `1`. | `0` |
+
+## Automatización con cron
+
+El bloqueo mediante `flock` evita que dos ejecuciones del script trabajen al mismo tiempo.
+
+```cron
+# Backup semanal a las 02:00
+0 2 * * 1 /opt/utilidadesHA/utilidadesHA.bash -b semanal
+
+# Backup diario a las 03:00
+0 3 * * * /opt/utilidadesHA/utilidadesHA.bash -b diario
+```
