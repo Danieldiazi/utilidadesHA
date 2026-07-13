@@ -22,9 +22,26 @@ if [[ -f "${myPath}/locales/${SYSTEM_LANGUAGE}" ]]; then
   source "${myPath}/locales/${SYSTEM_LANGUAGE}"
 fi
 
-log_info() { printf '[INFO] %s\n' "$*"; command -v logger >/dev/null 2>&1 && logger "$SCRIPT: $*" || true; }
-log_warn() { printf '[WARN] %s\n' "$*" >&2; command -v logger >/dev/null 2>&1 && logger "$SCRIPT: WARNING: $*" || true; }
-log_error() { printf '[ERROR] %s\n' "$*" >&2; command -v logger >/dev/null 2>&1 && logger "$SCRIPT: ERROR: $*" || true; }
+log_info() {
+  printf '[INFO] %s\n' "$*"
+  if command -v logger >/dev/null 2>&1; then
+    logger "$SCRIPT: $*" || true
+  fi
+}
+
+log_warn() {
+  printf '[WARN] %s\n' "$*" >&2
+  if command -v logger >/dev/null 2>&1; then
+    logger "$SCRIPT: WARNING: $*" || true
+  fi
+}
+
+log_error() {
+  printf '[ERROR] %s\n' "$*" >&2
+  if command -v logger >/dev/null 2>&1; then
+    logger "$SCRIPT: ERROR: $*" || true
+  fi
+}
 
 die() { log_error "$*"; exit 1; }
 
