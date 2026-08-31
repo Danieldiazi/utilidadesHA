@@ -405,20 +405,67 @@ run_diagnostics() {
   printf 'Diagnóstico de utilidadesHA %s\n' "$VERSION"
   printf '%s\n' '--------------------------------'
 
-  command -v docker >/dev/null 2>&1 && diag_ok "Docker instalado" || diag_fail "Docker no encontrado"
-  command -v flock >/dev/null 2>&1 && diag_ok "flock instalado" || diag_fail "flock no encontrado"
-  command -v tar >/dev/null 2>&1 && diag_ok "tar instalado" || diag_fail "tar no encontrado"
-
   if command -v docker >/dev/null 2>&1; then
-    docker info >/dev/null 2>&1 && diag_ok "Acceso al daemon Docker" || diag_fail "Sin acceso al daemon Docker"
+    diag_ok "Docker instalado"
+  else
+    diag_fail "Docker no encontrado"
   fi
 
-  [[ -d "$PATH_HA_CONFIG" ]] && diag_ok "PATH_HA_CONFIG existe: $PATH_HA_CONFIG" || diag_fail "PATH_HA_CONFIG no existe: $PATH_HA_CONFIG"
-  [[ -z "${PATH_HA_MEDIA:-}" || -d "$PATH_HA_MEDIA" ]] && diag_ok "PATH_HA_MEDIA válido" || diag_warn "PATH_HA_MEDIA no existe: $PATH_HA_MEDIA"
-  [[ -z "${PATH_HA_SSL:-}" || -d "$PATH_HA_SSL" ]] && diag_ok "PATH_HA_SSL válido" || diag_warn "PATH_HA_SSL no existe: $PATH_HA_SSL"
-  [[ -z "${PATH_HA_DBUS:-}" || -e "$PATH_HA_DBUS" ]] && diag_ok "PATH_HA_DBUS válido" || diag_warn "PATH_HA_DBUS no existe: $PATH_HA_DBUS"
-  [[ -z "${USB_ZIGBEE:-}" || -e "$USB_ZIGBEE" ]] && diag_ok "USB_ZIGBEE válido" || diag_warn "USB_ZIGBEE no existe: $USB_ZIGBEE"
-  [[ -z "${FOLDER_BACKUP:-}" || -d "$FOLDER_BACKUP" ]] && diag_ok "FOLDER_BACKUP válido" || diag_warn "FOLDER_BACKUP no existe: ${FOLDER_BACKUP:-}"
+  if command -v flock >/dev/null 2>&1; then
+    diag_ok "flock instalado"
+  else
+    diag_fail "flock no encontrado"
+  fi
+
+  if command -v tar >/dev/null 2>&1; then
+    diag_ok "tar instalado"
+  else
+    diag_fail "tar no encontrado"
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    if docker info >/dev/null 2>&1; then
+      diag_ok "Acceso al daemon Docker"
+    else
+      diag_fail "Sin acceso al daemon Docker"
+    fi
+  fi
+
+  if [[ -d "$PATH_HA_CONFIG" ]]; then
+    diag_ok "PATH_HA_CONFIG existe: $PATH_HA_CONFIG"
+  else
+    diag_fail "PATH_HA_CONFIG no existe: $PATH_HA_CONFIG"
+  fi
+
+  if [[ -z "${PATH_HA_MEDIA:-}" || -d "$PATH_HA_MEDIA" ]]; then
+    diag_ok "PATH_HA_MEDIA válido"
+  else
+    diag_warn "PATH_HA_MEDIA no existe: $PATH_HA_MEDIA"
+  fi
+
+  if [[ -z "${PATH_HA_SSL:-}" || -d "$PATH_HA_SSL" ]]; then
+    diag_ok "PATH_HA_SSL válido"
+  else
+    diag_warn "PATH_HA_SSL no existe: $PATH_HA_SSL"
+  fi
+
+  if [[ -z "${PATH_HA_DBUS:-}" || -e "$PATH_HA_DBUS" ]]; then
+    diag_ok "PATH_HA_DBUS válido"
+  else
+    diag_warn "PATH_HA_DBUS no existe: $PATH_HA_DBUS"
+  fi
+
+  if [[ -z "${USB_ZIGBEE:-}" || -e "$USB_ZIGBEE" ]]; then
+    diag_ok "USB_ZIGBEE válido"
+  else
+    diag_warn "USB_ZIGBEE no existe: $USB_ZIGBEE"
+  fi
+
+  if [[ -z "${FOLDER_BACKUP:-}" || -d "$FOLDER_BACKUP" ]]; then
+    diag_ok "FOLDER_BACKUP válido"
+  else
+    diag_warn "FOLDER_BACKUP no existe: ${FOLDER_BACKUP:-}"
+  fi
 
   diag_ok "Hardware: $HARDWARE"
   diag_ok "Imagen seleccionada: $image_ref"
@@ -426,7 +473,11 @@ run_diagnostics() {
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     if container_exists; then
       diag_ok "Contenedor $NAME_CONTAINER existe"
-      container_running && diag_ok "Contenedor $NAME_CONTAINER en ejecución" || diag_warn "Contenedor $NAME_CONTAINER detenido"
+      if container_running; then
+        diag_ok "Contenedor $NAME_CONTAINER en ejecución"
+      else
+        diag_warn "Contenedor $NAME_CONTAINER detenido"
+      fi
       diag_ok "Imagen actual: $(current_container_image)"
     else
       diag_warn "Contenedor $NAME_CONTAINER no existe"
