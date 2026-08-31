@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# v2.4, Author @danieldiazi
+# v2.5, Author @danieldiazi
 set -Eeuo pipefail
 
 MESSAGE_TITLE="utilidadesHA: script para Home Assistant Container"
@@ -13,6 +13,7 @@ SYSTEM_LANGUAGE=${SYSTEM_LANGUAGE:0:2}
 myPath=$(cd "$(dirname "$0")" && pwd)
 SCRIPT=$(basename "$0")
 DRY_RUN=0
+AUTO_CONFIRM=0
 ACTION=""
 UPDATE_TAG=""
 BACKUP_SUBFOLDER=""
@@ -62,13 +63,15 @@ run_mutating() {
 usage() {
   cat <<USAGE
 ${MESSAGE_USAGE}:
-  $SCRIPT -i [--dry-run]
+  $SCRIPT -i [--dry-run] [-y|--yes]
       Instala Home Assistant Container.
       Crea las carpetas configuradas y levanta el contenedor.
       Si Home Assistant ya está instalado, realiza una actualización forzada.
+      Solicita confirmación antes de modificar el sistema.
 
-  $SCRIPT -u [-f] [-t ETIQUETA] [--dry-run]
+  $SCRIPT -u [-f] [-t ETIQUETA] [--dry-run] [-y|--yes]
       Actualiza Home Assistant usando la imagen configurada.
+      Solicita confirmación antes de detener o recrear el contenedor.
 
       -f
           Fuerza la recreación del contenedor aunque la versión instalada
@@ -80,7 +83,12 @@ ${MESSAGE_USAGE}:
 
       --dry-run
           Muestra los comandos que modificarían el sistema, pero no los ejecuta.
-          Es recomendable usarlo antes de una instalación o actualización real.
+          No solicita confirmación porque no realiza cambios.
+
+      -y, --yes
+          Confirma automáticamente las operaciones delicadas.
+          Úsalo solo en automatizaciones controladas o cuando tengas claro
+          que deseas ejecutar la instalación o actualización sin preguntas.
 
   $SCRIPT -c
       Descarga la información de la imagen y muestra la versión disponible
@@ -102,6 +110,7 @@ Ejemplos:
   $SCRIPT -u
   $SCRIPT -u -f
   $SCRIPT -u -t 2026.7.1
+  $SCRIPT -u -y
   $SCRIPT -b diario
 USAGE
 }
@@ -148,6 +157,50 @@ acquire_lock() {
   # This avoids permission errors when the persistent file belongs to root.
   exec 9<"$LOCK_FILE"
   flock -n 9 || die "Ya hay otro proceso de utilidadesHA en ejecución"
+}
+
+confirm_dangerous_action() {
+  local response=""
+
+  (( DRY_RUN )) && return 0
+  (( AUTO_CONFIRM )) && return 0
+
+  case "$ACTION" in
+    install)
+      printf '\n[ATENCIÓN] La instalación puede crear directorios y crear o recrear el contenedor "%s".\n' "$NAME_CONTAINER"
+      ;;
+    update)
+      printf '\n[ATENCIÓN] La actualización puede detener y eliminar el contenedor "%s" para recrearlo con la nueva imagen.\n' "$NAME_CONTAINER"
+      if [[ "$FORCE" == "1" ]]; then
+        printf '[ATENCIÓN] Se ha usado -f: el contenedor se recreará aunque la versión instalada coincida.\n'
+      fi
+      if [[ -n "$UPDATE_TAG" ]]; then
+        printf '[ATENCIÓN] Se ha usado -t: se utilizará la etiqueta concreta "%s".\n' "$UPDATE_TAG"
+      fi
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+
+  if [[ ! -t 0 ]]; then
+    die "La operación requiere confirmación interactiva. Usa -y o --yes únicamente si deseas confirmarla de forma automática"
+  fi
+
+  printf '¿Continuar? [s/N]: '
+  if ! read -r response; then
+    die "No se pudo leer la confirmación"
+  fi
+
+  case "${response,,}" in
+    s|si|sí|y|yes)
+      log_info "Operación confirmada"
+      ;;
+    *)
+      log_warn "Operación cancelada por el usuario"
+      exit 0
+      ;;
+  esac
 }
 
 check_hardware() {
@@ -374,6 +427,9 @@ parse_args() {
       --dry-run)
         DRY_RUN=1
         ;;
+      -y|--yes)
+        AUTO_CONFIRM=1
+        ;;
       -h|--help)
         usage
         exit 0
@@ -401,6 +457,8 @@ main() {
   select_image
 
   [[ -n "$UPDATE_TAG" ]] && TAG_DOCKER="$UPDATE_TAG"
+
+  confirm_dangerous_action
 
   case "$ACTION" in
     install) new_install ;;
