@@ -61,8 +61,6 @@ run_mutating() {
 
 usage() {
   cat <<USAGE
-${MESSAGE_TITLE}
-
 ${MESSAGE_USAGE}:
   $SCRIPT -i [--dry-run]
       Instala Home Assistant Container.
@@ -137,7 +135,18 @@ validate_common_config() {
 
 acquire_lock() {
   require_command flock
-  exec 9>"$LOCK_FILE"
+
+  # Create the lock file only if it does not exist. The file can persist between
+  # executions and may have been created by root or by another user.
+  if [[ ! -e "$LOCK_FILE" ]]; then
+    (umask 022; : >"$LOCK_FILE") 2>/dev/null || true
+  fi
+
+  [[ -r "$LOCK_FILE" ]] || die "No se puede leer el fichero de bloqueo: $LOCK_FILE"
+
+  # Open read-only: flock does not need write access to take an exclusive lock.
+  # This avoids permission errors when the persistent file belongs to root.
+  exec 9<"$LOCK_FILE"
   flock -n 9 || die "Ya hay otro proceso de utilidadesHA en ejecución"
 }
 
